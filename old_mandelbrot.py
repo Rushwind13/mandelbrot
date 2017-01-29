@@ -18,16 +18,19 @@ import sys
 
 screenx = (0,10000)
 screeny = (0,10000)
+screenx = (0,1000)
+screeny = (0,1000)
 mandx = ( -1.5, -1.3 )
 mandy = ( 0.03, 0.23 )
 mandx = ( -2.0, 2.0 )
 mandy = ( -2.0, 2.0 )
 
-julia = ( -0.79,  0.15 )
-#julia = ( 0.0,   0.65 )
+
+# julia = ( -0.79,  0.15 )
+# julia = ( 0.0,   0.65 )
 # julia = ( -0.162, 1.04 )
 # julia = (  0.3,  -0.01 )
-# julia = ( -0.726895347709114071439, 0.188887129043845954792 )
+julia = ( -0.726895347709114071439, 0.188887129043845954792 )
 # julia = ( -0.75,  0.2 )
 # julia = (  0.0,  -0.8 )
 # julia = ( -1.25,  0.15 )
@@ -36,7 +39,7 @@ julia = ( -0.79,  0.15 )
 tilesx = (0,9)
 tilesy = (0,9)
 
-max_iterations = 300
+max_iterations = 255
 
 from numpy import *
 def CreateImage( h, w, planes ):
@@ -74,7 +77,7 @@ def precalc_range( min, max, base, scalar ):
 		unit = unit + 1
 	return retval
 
-def mandelbrot( xcoords, ycoords, prex, prey ):
+def mandelbrot( xcoords, ycoords, prex, prey, julia_set = False ):
 	x0 = xcoords[0]
 	y0 = ycoords[0]
 	
@@ -84,12 +87,22 @@ def mandelbrot( xcoords, ycoords, prex, prey ):
 	while y0 < ycoords[1]:
 		while x0 < xcoords[1]:
 			curr_iteration = 0
-			x = prex[x0]
-			y = prey[y0]
+			if julia_set:
+				x = prex[x0]
+				y = prey[y0]
+			else: # Mandelbrot set
+				x = 0
+				y = 0
 			while (x*x + y*y) < 4.0 and curr_iteration < max_iterations:
-				temp = x*x - y*y + julia[0]
-				y = 2 * x * y + julia[1]
+				temp = x*x - y*y
+				y = 2 * x * y
 				x = temp
+				if julia_set:
+					x = x + julia[0]
+					y = y + julia[1]
+				else:
+					x = x + prex[x0]
+					y = y + prey[y0]
 				#print x,y, " " ,
 				curr_iteration = curr_iteration + 1
 			#print x0,y0," ",curr_iteration,
@@ -97,7 +110,11 @@ def mandelbrot( xcoords, ycoords, prex, prey ):
 			#sys.stdout.flush()
 			x0 = x0+1
 			#image[y0 * xcoords[1] + x0] = curr_iteration
-			image[y0][x0] = curr_iteration
+			if curr_iteration == max_iterations:
+				image[y0][x0] = 0
+			else:
+				image[y0][x0] = curr_iteration
+				
 			if curr_iteration in  iterations:
 				iterations[curr_iteration] += 1
 			else:
@@ -147,4 +164,4 @@ fy = precalc_range( screeny[0], screeny[1], mandy[0], lerp_scalars[1] )
 
 #print fy
 
-mandelbrot( screenx, screeny, fx, fy )
+mandelbrot( screenx, screeny, fx, fy, julia_set = True )
